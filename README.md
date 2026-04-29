@@ -124,6 +124,7 @@ This section assumes you are starting fresh and want to see the full flow.
 1. Go to Login
 2. Enter your email + password
 3. On success you’ll be redirected to the home page
+
 ### C) Forgot password + reset password
 
 1. Go to Forgot Password
