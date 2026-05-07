@@ -7,7 +7,7 @@ import { map, finalize } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Account } from '../_models';
 
-const baseUrl = `${environment.apiUrl}/accounts`;
+const baseUrl = environment.apiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
@@ -38,7 +38,12 @@ export class AccountService {
     }
 
     logout() {
-        this.http.post<any>(`${baseUrl}/revoke-token`, {}, { withCredentials: true }).subscribe();
+        this.http.post<any>(`${baseUrl}/revoke-token`, {}, { withCredentials: true })
+            .subscribe({
+                next: () => {},
+                error: () => {}
+            });
+
         this.stopRefreshTokenTimer();
         this.accountSubject.next(null);
         this.router.navigate(['/account/login']);
@@ -54,23 +59,23 @@ export class AccountService {
     }
 
     register(account: Account) {
-        return this.http.post(`${baseUrl}/register`, account);
+        return this.http.post(`${baseUrl}/register`, account, { withCredentials: true });
     }
 
     verifyEmail(token: string) {
-        return this.http.post(`${baseUrl}/verify-email`, { token });
+        return this.http.post(`${baseUrl}/verify-email`, { token }, { withCredentials: true });
     }
 
     forgotPassword(email: string) {
-        return this.http.post(`${baseUrl}/forgot-password`, { email });
+        return this.http.post(`${baseUrl}/forgot-password`, { email }, { withCredentials: true });
     }
 
     validateResetToken(token: string) {
-        return this.http.post(`${baseUrl}/validate-reset-token`, { token });
+        return this.http.post(`${baseUrl}/validate-reset-token`, { token }, { withCredentials: true });
     }
 
     resetPassword(token: string, password: string, confirmPassword: string) {
-        return this.http.post(`${baseUrl}/reset-password`, { token, password, confirmPassword });
+        return this.http.post(`${baseUrl}/reset-password`, { token, password, confirmPassword }, { withCredentials: true });
     }
 
     getAll() {
@@ -111,14 +116,17 @@ export class AccountService {
     // helper methods
 
     private startRefreshTokenTimer() {
-        // parse json object from base64 encoded jwt token
-        const jwtBase64 = this.accountValue!.jwtToken!.split('.')[1];
+        if (!this.accountValue?.jwtToken) return;
+
+        const jwtBase64 = this.accountValue.jwtToken.split('.')[1];
         const jwtToken = JSON.parse(atob(jwtBase64));
 
-        // set a timeout to refresh the token a minute before it expires
         const expires = new Date(jwtToken.exp * 1000);
         const timeout = expires.getTime() - Date.now() - (60 * 1000);
-        this.refreshTokenTimeout = setTimeout(() => this.refreshToken().subscribe(), timeout);
+
+        this.refreshTokenTimeout = setTimeout(() => {
+            this.refreshToken().subscribe();
+        }, timeout);
     }
 
     private stopRefreshTokenTimer() {
