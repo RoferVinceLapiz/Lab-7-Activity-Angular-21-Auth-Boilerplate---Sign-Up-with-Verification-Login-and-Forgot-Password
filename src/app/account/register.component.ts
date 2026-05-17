@@ -32,6 +32,7 @@ export class RegisterComponent implements OnInit {
             validator: MustMatch('password', 'confirmPassword')
         });
     }
+    
 
     // convenience getter for easy access to form fields
     get f() { return this.form.controls; }
@@ -61,4 +62,6 @@ export class RegisterComponent implements OnInit {
                 }
             });
     }
+
+    
 }
